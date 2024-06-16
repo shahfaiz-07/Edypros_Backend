@@ -33,9 +33,7 @@ const userSchema = new mongoose.Schema(
     },
     avatar: {
       type: String,
-    },
-    refreshTokens: {
-      type: String,
+      required: true,
     },
     registeredCourses: [
       {
@@ -58,6 +56,9 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    refreshToken: {
+        type: String
+    }
   },
   { timestamps: true }
 );
