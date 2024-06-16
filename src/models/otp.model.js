@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { sendMail } from './../utils/mailSender.js';
 
 const OTPSchema = new mongoose.Schema({
     email: {
@@ -17,5 +18,12 @@ const OTPSchema = new mongoose.Schema({
         expires: '5m'
     }
 });
+
+OTPSchema.pre("save", async function (email, otp) {
+    await sendMail(email, "Edypros Verification OTP", 
+        `<h3>Dear User</h3>
+        <p>Your one time password for email verfication is <b>${otp}</b>. It will automatically expire is 5 minutes !!</p>
+        <p>Regards, <br/>Team Edypros.</p>`);
+})
 
 export const OTP = mongoose.model("OTP", OTPSchema);
