@@ -1,0 +1,19 @@
+{
+  "name": "edypros-server",
+  "version": "1.0.0",
+  "description": "BackEnd server for Edypros, an innovative edtech platform providing personalized learning experience through cutting edge technology. The server handles user authentication, course management, progress tracking, and real-time interactions to deliver a seamless educational experience. Built with Node.js, Express, and integrated with various databases and APIs to ensure high performance and scalability.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "edypros",
+    "education",
+    "learning",
+    "backend",
+    "development",
+    "server"
+  ],
+  "author": "S Faizaan Hussain",
+  "license": "ISC"
+}
