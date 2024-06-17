@@ -1,76 +1,76 @@
-import { Tag } from "../models/tags.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
+import { Category } from './../models/category.model';
 
-const createTag = asyncHandler(async (req, res) => {
+const createCategory = asyncHandler(async (req, res) => {
     const { title, description } = req.body;
     if(!title || !description) {
         throw new ApiError(400, "All fields are required !!");
     }
 
-    const existingTag = await Tag.findOne({tag});
+    const existingCategory = await Category.findOne({category});
     
-    if(existingTag) {
-        throw new ApiError(409, 'Tag already exists !!');
+    if(existingCategory) {
+        throw new ApiError(409, 'Category already exists !!');
     }
 
-    const tag = await Tag.create({
+    const category = await Category.create({
         title, description
     });
 
-    if(!tag) {
-        throw new ApiError(500, 'Unable to save tag to DB !!')
+    if(!category) {
+        throw new ApiError(500, 'Unable to save category to DB !!')
     }
 
     return res.status(200).json(
-        new ApiResponse(200, tag, "Tag created successfully !!")
+        new ApiResponse(200, category, "Category created successfully !!")
     )
 });
 
-const deleteTag = asyncHandler(async (req, res) => {
+const deleteCategory = asyncHandler(async (req, res) => {
     const {title} = req.body;
     if(!title) {
-        throw new ApiError(400, "Tag title is required !!");
+        throw new ApiError(400, "Category title is required !!");
     }
 
-    const tag = await Tag.findOneAndDelete({title});
+    const category = await Category.findOneAndDelete({title});
 
-    if(!tag) {
-        throw new ApiError(404, "Tag doesn't exists !!");
+    if(!category) {
+        throw new ApiError(404, "Category doesn't exists !!");
     }
 
     return res.status(200).json(
-        new ApiResponse(200, tag, "Tag deleted successfully !!")
+        new ApiResponse(200, category, "Category deleted successfully !!")
     )
 })
 
-const updateTag = asyncHandler(async (req, res) => {
+const updateCategory = asyncHandler(async (req, res) => {
     const {title, description} = req.body;
     if(!title || !description) {
         throw new ApiError(400, "All fields are required !!");
     }
 
-    const tag = await Tag.findOneAndUpdate({title}, {description}, {new:true});
+    const category = await Category.findOneAndUpdate({title}, {description}, {new:true});
 
-    if(!tag) {
-        throw new ApiError(404, "Tag not found !!");
+    if(!category) {
+        throw new ApiError(404, "Category not found !!");
     }
 
     return res.status(200).json(
-        new ApiResponse(200, tag, "Tag description updated successfully !!")
+        new ApiResponse(200, category, "Category description updated successfully !!")
     )
 })
 
-const getAllTags = asyncHandler(async (req, res) => {
-    const allTags = await Tag.find();
-    if(!allTags) {
-        throw new ApiError(500, "Error while fetching tag from the DB !!");
+const getAllCategorys = asyncHandler(async (req, res) => {
+    const allCategorys = await Category.find();
+    if(!allCategorys) {
+        throw new ApiError(500, "Error while fetching category from the DB !!");
     }
 
     return res.status(200).json(
-        new ApiResponse(200, allTags, "All tags fetched successfully !!")
+        new ApiResponse(200, allCategorys, "All tags fetched successfully !!")
     )
 })
 
-export { createTag, deleteTag, updateTag, getAllTags }
+export { createCategory, deleteCategory, updateCategory, getAllCategorys }
