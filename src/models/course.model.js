@@ -1,54 +1,59 @@
 import mongoose from "mongoose";
 
-const courseSchema = new mongoose.Schema({
+const courseSchema = new mongoose.Schema(
+  {
     name: {
-        type: String,
-        required: true,
-        trim: true,
-        index: true
+      type: String,
+      required: true,
+      trim: true,
+      index: true,
     },
     description: {
-        type: String,
-        required: true,
-        trim: true
+      type: String,
+      required: true,
+      trim: true,
     },
     learnings: {
-        type: String,
-        required: true,
-        trim: true
+      type: String,
+      required: true,
+      trim: true,
     },
     content: [
-        {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "Section",
-        }
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Section",
+      },
     ],
     ratingAndReviews: [
-        {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "RatingAndReviews"
-        }
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "RatingAndReviews",
+      },
     ],
     price: {
-        type: Number,
-        default: 0
+      type: Number,
+      default: 0,
     },
     thumbnail: {
-        type: String,
-        required: true,
+      type: String,
+      required: true,
     },
-    tags: [
-        {
-            types: mongoose.Schema.Types.ObjectId,
-            ref: "Tag"
-        }
-    ],
+    tag: {
+      types: mongoose.Schema.Types.ObjectId,
+      ref: "Tag",
+    },
     studentsEnrolled: [
-        {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "User"
-        }
-    ]
-}, {timestamps: true})
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
+    instructor: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User"
+    }
+  },
+  { timestamps: true }
+);
 
 export const Course = mongoose.model("Course", courseSchema);

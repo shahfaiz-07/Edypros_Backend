@@ -8,7 +8,7 @@ const tagSchema = new mongoose.Schema({
     index: true,
     unique: true,
   },
-  course: [
+  courses: [
     {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Course",
