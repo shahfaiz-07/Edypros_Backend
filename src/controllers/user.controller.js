@@ -2,10 +2,10 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { User } from "../models/user.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
-import { Profile } from "./../models/profile.model.js";
+import { Profile } from "../models/profile.model.js";
 import { DICEBEAR_API_URI } from "../constants.js";
-import { generateOTP } from './../utils/otpGenerator';
-import { OTP } from './../models/otp.model';
+import { generateOTP } from '../utils/otpGenerator.js';
+import { OTP } from '../models/otp.model.js';
 import { sendMail } from "../utils/mailSender.js";
 
 const generateAccessAndRefreshTokens = async (userId) => {
