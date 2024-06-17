@@ -347,4 +347,43 @@ const changePassword = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, {}, "Password Changed Successfully !!"));
 });
 
-export {register, login, logout, refreshAccessToken, generateResetToken, changePassword, resetPassword}
+const deleteAccount = asyncHandler(async (req, res) => {
+  try {
+    const user = await User.findByIdAndDelete(req.user?._id);
+    const profile = await Profile.findByIdAndDelete(req.user?.profile);
+
+    // TODO: removing student from registeredCourses
+    if(user.accountType === "Student") {
+
+    }
+    
+    const options = {
+      httpOnly: true,
+      secure: true,
+    };
+  
+    return res
+      .status(200)
+      .clearCookie("accessToken", options)
+      .clearCookie("refreshToken", options)
+      .json(new ApiResponse(200, {}, "User account deleted successfully !!"));
+  } catch (error) {
+    return res.status(500).json(
+      new ApiResponse(500, {}, "Error occured while deleting the account !!")
+    )
+  }
+});
+
+const getUserDetails = asyncHandler(async (req, res) => {
+  const userDetails = await User.findById(req.user?._id).select("-password -refreshToken").populate("profile");
+
+  if(!userDetails) {
+    throw new ApiError(500, "Cannot fetch user data !!")
+  }
+
+  return res.status(200).json(
+    new ApiResponse(200, userDetails, "User details fetched successfully !!")
+  )
+})
+
+export {register, login, logout, refreshAccessToken, generateResetToken, changePassword, resetPassword, deleteAccount, getUserDetails}
