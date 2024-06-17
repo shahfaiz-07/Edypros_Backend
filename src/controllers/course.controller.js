@@ -2,20 +2,20 @@ import {asyncHandler} from '../utils/asyncHandler.js'
 import { ApiError } from '../utils/ApiError.js'
 import { ApiResponse } from '../utils/ApiResponse.js'
 import { uploadOnCloudinary } from '../utils/cloudinary.js'
-import { Tag } from '../models/tags.model.js';
 import { Course } from '../models/course.model.js';
 import { isValidObjectId } from 'mongoose';
+import { Category } from './../models/category.model';
 const createCourse = asyncHandler(async (req, res) => {
-    const { name, description, learnings, price, tag } = req.body;
+    const { name, description, learnings, price, category, tags } = req.body;
 
-    if([name, description, learnings, price, tag].some( (field) => field !== "")) {
+    if([name, description, learnings, price, category].some( (field) => field !== "")) {
         throw new ApiError(400, "All fields are required !!");
     }
     
-    const tagObj = await Tag.findOne({title: tag});
+    const categoryObj = await Category.findOne({title: category});
 
-    if(!tagObj) {
-        throw new ApiError(404, "Invalid tag !!");
+    if(!categoryObj) {
+        throw new ApiError(404, "Invalid category !!");
     }
     const thumbnailLocalPath = req.file?.path;
 
@@ -32,7 +32,7 @@ const createCourse = asyncHandler(async (req, res) => {
     console.log(thumbnail)
 
     const course = await Course.create({
-        name, description, learnings, price, thumbnail: thumbnail.url, tag:tagObj._id, instructor: req.user?._id
+        name, description, learnings, price, thumbnail: thumbnail.url, category:categoryObj._id, instructor: req.user?._id, tags
     });
 
     if(!course) {
@@ -52,8 +52,8 @@ const createCourse = asyncHandler(async (req, res) => {
         throw new ApiError(500, "Error while updating instructor data !!")
     }
 
-    tagObj.courses.push(course._id);
-    await tagObj.save();
+    categoryObj.courses.push(course._id);
+    await categoryObj.save();
 
     return res.status(200).json(
         new ApiResponse(200, course, "Course created successfully !!")
@@ -73,12 +73,12 @@ const getAllCourses = asyncHandler(async (req, res) => {
 })
 
 const getCoursesByTag = asyncHandler(async (req, res) => {
-    const { tag } = req.body;
-    if(!tag) {
-        throw new ApiError(400, "Tag is requried !!");
+    const { category } = req.body;
+    if(!category) {
+        throw new ApiError(400, "Category is requried !!");
     }
 
-    const courses = await Tag.findOne({title: tag}).select("courses");
+    const courses = await Category.findOne({title: category}).select("courses");
 
     if(!courses) {
         throw new ApiError(500, "Error while fetching courses from the DB !!");
@@ -139,16 +139,16 @@ const updateCourse = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Invalid course id !!");
     }
 
-    const { name, description, learnings, price, tag } = req.body;
+    const { name, description, learnings, price, category, tags } = req.body;
 
-    if([name, description, learnings, price, tag].some( (field) => field !== "")) {
+    if([name, description, learnings, price, category].some( (field) => field !== "")) {
         throw new ApiError(400, "All fields are required !!");
     }
 
     const course = await Course.findByIdAndUpdate(
         courseId,
         {
-            name, description, learnings, price, tag
+            name, description, learnings, price, category, tags
         },
         {
             new: true
