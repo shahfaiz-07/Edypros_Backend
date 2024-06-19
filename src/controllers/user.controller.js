@@ -7,6 +7,8 @@ import { DICEBEAR_API_URI } from "../constants.js";
 import { generateOTP } from '../utils/otpGenerator.js';
 import { OTP } from '../models/otp.model.js';
 import { sendMail } from "../utils/mailSender.js";
+import { uploadOnCloudinary } from "../utils/cloudinary.js";
+import { Course } from "../models/course.model.js";
 
 const generateAccessAndRefreshTokens = async (userId) => {
   try {
@@ -89,7 +91,8 @@ const register = asyncHandler(async (req, res) => {
   if(!recentOTP) {
     throw new ApiError(404, "Otp Expired !! Re Generate !!");
   }
-  if(otp !== recentOTP.otp) {
+  console.log(recentOTP)
+  if(otp !== recentOTP[0].otp) {
     throw new ApiError(400, "Invalid OTP !!");
   }
 
@@ -272,7 +275,7 @@ const generateResetToken = asyncHandler(async (req, res) => {
 
   const updatedDetails = await User.findOneAndUpdate({email}, {
     passToken,
-    passTokenExpiry: Date.now() = 5*60*1000
+    passTokenExpiry: Date.now() + 5*60*1000
   }, {new : true});
 
   if(!updatedDetails) {
@@ -286,7 +289,7 @@ const generateResetToken = asyncHandler(async (req, res) => {
     <p>Regards, <br/>Team Edypros.</p>`
   )
 
-  return res.status.json(new ApiResponse(200, {}, "Password reset email sent successfully !!"))
+  return res.status(200).json(new ApiResponse(200, {}, "Password reset email sent successfully !!"))
 })
 
 const resetPassword = asyncHandler(async (req, res) => {
@@ -303,6 +306,10 @@ const resetPassword = asyncHandler(async (req, res) => {
 
   const user = await User.findOne({passToken});
 
+  if(await user.isPasswordCorrect(password)) {
+    throw new ApiError(400, "Password cannot be same as previous password !!")
+  }
+
   if(!user) {
     throw new ApiError(404, "Invalid password token !!");
   }
@@ -310,15 +317,16 @@ const resetPassword = asyncHandler(async (req, res) => {
   if(user.passTokenExpiry < Date.now()) {
     throw new ApiError(400, "Pass token expired !! Try resetting your password again to generate new !!");
   }
+  
+  user.password = password;
+  await user.save()
 
-  const updatedUser = await findByIdAndUpdate(user._id, {password}, {new: true});
-
-  if(!updatedUser) {
-    throw new ApiError(500, "Failed to save updated password to DB !!");
-  }
+  // if(!updatedUser) {
+  //   throw new ApiError(500, "Failed to save updated password to DB !!");
+  // }
 
   return res.status(200).json(
-    new ApiResponse(200, )
+    new ApiResponse(200, user, "Password updated successfully !!")
   )
 });
 
@@ -354,7 +362,16 @@ const deleteAccount = asyncHandler(async (req, res) => {
 
     // TODO: removing student from registeredCourses
     if(user.accountType === "Student") {
-
+      user.registeredCourses.forEach( async (courseId) => {
+        await Course.findByIdAndUpdate(
+          courseId,
+          {
+            $pull: {
+              studentsEnrolled: user._id
+            }
+          }
+        )
+      })
     }
     
     const options = {
@@ -366,7 +383,7 @@ const deleteAccount = asyncHandler(async (req, res) => {
       .status(200)
       .clearCookie("accessToken", options)
       .clearCookie("refreshToken", options)
-      .json(new ApiResponse(200, {}, "User account deleted successfully !!"));
+      .json(new ApiResponse(200, user, "User account deleted successfully !!"));
   } catch (error) {
     return res.status(500).json(
       new ApiResponse(500, {}, "Error occured while deleting the account !!")
@@ -374,8 +391,41 @@ const deleteAccount = asyncHandler(async (req, res) => {
   }
 });
 
+const updateAvatar = asyncHandler(async (req, res) => {
+  const avatarLocalPath = req.file?.path;
+
+  if(!avatarLocalPath) {
+    throw new ApiError(400, "Avatar file is missing !!");
+  }
+
+  const avatar = await uploadOnCloudinary(avatarLocalPath);
+
+  if(!avatar.secure_url) {
+    throw new ApiError(500, "Error while uploading to cloudinary !!");
+  }
+
+  const user = await User.findByIdAndUpdate(
+    req.user?._id, {
+      $set: {
+        avatar: avatar.secure_url
+      }
+    },
+    {
+      new: true
+    }
+  ).select("-password -refreshToken");
+
+  if(!user) {
+    throw new ApiError("Error while uploading to DB !!")
+  }
+
+  return res.status(200).json(
+    new ApiResponse(200, user, "User avatar updated successfully !!")
+  )
+})
+
 const getUserDetails = asyncHandler(async (req, res) => {
-  const userDetails = await User.findById(req.user?._id).select("-password -refreshToken").populate("profile");
+  const userDetails = await User.findById(req.user?._id).select("-password -refreshToken").populate("profile").populate("registeredCourses");
 
   if(!userDetails) {
     throw new ApiError(500, "Cannot fetch user data !!")
@@ -386,4 +436,4 @@ const getUserDetails = asyncHandler(async (req, res) => {
   )
 })
 
-export {register, login, logout, refreshAccessToken, generateResetToken, changePassword, resetPassword, deleteAccount, getUserDetails}
+export {register, login, logout, refreshAccessToken, generateResetToken, changePassword, resetPassword, deleteAccount, getUserDetails, sendOTP, updateAvatar}

@@ -11,13 +11,18 @@ const videoSchema = new mongoose.Schema({
         required: true,
         trim: true,
     },
+    description: {
+        type: String,
+        required: true,
+        trim: true
+    },
     url: {
         type: String,
         required: true,
     },
     additionalUrl: {
         type: String,
-        required: true
+        // required: true
     },
     section: {
         type: mongoose.Schema.Types.ObjectId,

@@ -43,10 +43,10 @@ const isInstructor = asyncHandler(async (req, _, next) => {
 })
 
 const isAdmin = asyncHandler(async (req, _, next) => {
-    if (req.user?.accountType !== "Instructor") {
-        throw new ApiError(403, "This is a protected route for instructors !!");
+    if (req.user?.accountType !== "Admin") {
+        throw new ApiError(403, "This is a protected route for admins!!");
       }
       next();
 })
 
-export { verifyJWT };
+export { verifyJWT, isStudent, isInstructor, isAdmin };

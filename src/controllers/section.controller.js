@@ -1,14 +1,16 @@
 import { isValidObjectId } from "mongoose";
-import { Section } from "../models/section.model";
-import { ApiError } from "../utils/ApiError";
-import { asyncHandler } from "../utils/asyncHandler";
-import { Course } from "../models/course.model";
-import { ApiResponse } from "../utils/ApiResponse";
+import { Section } from "../models/section.model.js";
+import { ApiError } from "../utils/ApiError.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
+import { Course } from "../models/course.model.js";
+import { ApiResponse } from "../utils/ApiResponse.js";
+import { Video } from "../models/video.model.js";
+import { removeFromCloudinary } from "../utils/cloudinary.js";
 
 const createSection = asyncHandler(async (req, res) => {
   const { sectionName, courseId } = req.body;
 
-  if (!name || !courseId) {
+  if (!sectionName || !courseId) {
     throw new ApiError(400, "All Field are required !!");
   }
 
@@ -35,13 +37,7 @@ const createSection = asyncHandler(async (req, res) => {
     {
       new: true,
     }
-  ).populate({
-    path: "sections",
-    populate: {
-      path: "videos",
-      model: "Video",
-    },
-  });
+  ).populate("sections");
 
   if (!course) {
     throw new ApiError(500, "Error while updating section in course !!");
@@ -101,11 +97,15 @@ const deleteSection = asyncHandler(async(req, res) => {
         throw new ApiError(404, "Section not found !!");
     }
 
-    const course = await Course.findById(section.course)
+    const course = await Course.findById(section.sectionOfCourse)
 
-    course.sections = course.sections.filter( (cSection) => cSection !== section._id)
-
+    course.sections = course.sections.filter( (cSection) => cSection.toString() !== section._id.toString())
     await course.save();
+
+    await Promise.all(section.videos.map(async (video) => {
+      const deletedVideo = await Video.findByIdAndDelete(video);
+      await removeFromCloudinary(deletedVideo.url, "video")
+    }));
 
     return res.status(200).json(
         new ApiResponse(200, section, "Section deleted successfully !!")

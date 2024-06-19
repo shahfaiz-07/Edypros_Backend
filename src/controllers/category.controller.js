@@ -2,7 +2,7 @@ import { Course } from "../models/course.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
-import { Category } from './../models/category.model';
+import { Category } from './../models/category.model.js';
 
 const createCategory = asyncHandler(async (req, res) => {
     const { title, description } = req.body;
@@ -10,7 +10,7 @@ const createCategory = asyncHandler(async (req, res) => {
         throw new ApiError(400, "All fields are required !!");
     }
 
-    const existingCategory = await Category.findOne({category});
+    const existingCategory = await Category.findOne({title});
     
     if(existingCategory) {
         throw new ApiError(409, 'Category already exists !!');
@@ -70,7 +70,7 @@ const getAllCategorys = asyncHandler(async (req, res) => {
     }
 
     return res.status(200).json(
-        new ApiResponse(200, allCategorys, "All tags fetched successfully !!")
+        new ApiResponse(200, allCategorys, "All categories fetched successfully !!")
     )
 })
 

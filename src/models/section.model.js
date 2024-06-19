@@ -5,6 +5,7 @@ const sectionSchema = new mongoose.Schema({
         type: String,
         required: true,
         trim: true,
+        unique: true
     },
     sectionOfCourse : {
         type: mongoose.Schema.Types.ObjectId,
@@ -17,11 +18,6 @@ const sectionSchema = new mongoose.Schema({
             ref: "Video"
         }
     ],
-    course: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Course",
-        required: true,
-    }
 } , {timestamps: true});
 
 export const Section = mongoose.model("Section", sectionSchema)

@@ -1,23 +1,25 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
-import { uploadOnCloudinary } from "../utils/cloudinary.js";
+import { removeFromCloudinary, uploadOnCloudinary } from "../utils/cloudinary.js";
 import { Course } from "../models/course.model.js";
-import { isValidObjectId } from "mongoose";
-import { Category } from "./../models/category.model";
+import { isValidObjectId, model } from "mongoose";
+import { Category } from "./../models/category.model.js";
+import { User } from "../models/user.model.js";
+import { Section } from "../models/section.model.js";
+import { Video } from "../models/video.model.js";
 const createCourse = asyncHandler(async (req, res) => {
   const { name, description, learnings, price, category, tags } = req.body;
-
+  // console.log(req.body)
+  // console.log(category, name, description)
   if (
-    [name, description, learnings, price, category].some(
-      (field) => field !== ""
-    )
+    !name || !description || !learnings || !price || !category
   ) {
     throw new ApiError(400, "All fields are required !!");
   }
-
+  
   const categoryObj = await Category.findOne({ title: category });
-
+  console.log(categoryObj)
   if (!categoryObj) {
     throw new ApiError(404, "Invalid category !!");
   }
@@ -110,16 +112,14 @@ const getCourseById = asyncHandler(async (req, res) => {
 
   const course = await Course.findById(courseId)
     .populate("instructor")
-    .populate("ratingsAndReviews")
+    // .populate("ratingsAndReviews")
     .populate("category")
     .populate({
       path: "sections",
       populate: {
-        populate: {
-          path: "videos",
-          model: "Video",
-        },
-      },
+        path: 'videos',
+        model: "Video"
+      }
     });
     if(!course) {
         throw new ApiError(500, "Cannot fetch course details !!");
@@ -193,6 +193,54 @@ const updateCourse = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, course, "Course data updated sucessfully !!"));
 });
 
+const deleteCourse = asyncHandler(async (req, res) => {
+  const { courseId } = req.params;
+
+  if (!courseId) {
+    throw new ApiError(400, "Course ID is required !!");
+  }
+
+  if (!isValidObjectId(courseId)) {
+    throw new ApiError(400, "Invalid course id !!");
+  }
+
+  const course = await Course.findByIdAndDelete(courseId);
+
+  if(!course) {
+    throw new ApiError(404, "Course not found !!");
+  }
+
+  await removeFromCloudinary(course.thumbnail)
+
+  const instructor = await User.findById(course.instructor);
+
+  instructor.registeredCourses = instructor.registeredCourses.filter( (createdCourse) => createdCourse.toString() !== course._id.toString() )
+
+  await instructor.save()
+
+  if(!instructor) {
+    throw new ApiError(500, "Cannot remove course from instructor's database")
+  }
+
+  await Promise.all(course.sections.map(async (section) => {
+    const deletedSection = await Section.findByIdAndDelete(section);
+    await Promise.all(deletedSection.videos.map(async (video) => {
+      const deletedVideo = await Video.findByIdAndDelete(video);
+      await removeFromCloudinary(deletedVideo.url, "video")
+    }))
+  }));
+
+  await Promise.all(course.studentsEnrolled.map(async (studentId) => {
+    const student = await User.findById(studentId);
+    student.registeredCourses = student.registeredCourses.filter( (registeredCourseId) => registeredCourseId.toString() !== course._id)
+    await student.save();
+  }))
+
+  return res.status(200).json(
+    new ApiResponse(200, course, "Course and related content deleted successfully !!")
+  )
+})
+
 export {
   createCourse,
   getCoursesByTag,
@@ -200,4 +248,5 @@ export {
   getCourseById,
   getCourseByTitle,
   updateCourse,
+  deleteCourse
 };
