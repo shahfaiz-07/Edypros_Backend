@@ -8,6 +8,9 @@ const categorySchema = new mongoose.Schema({
     index: true,
     unique: true,
   },
+  description: {
+    type: String
+  },
   courses: [
     {
       type: mongoose.Schema.Types.ObjectId,

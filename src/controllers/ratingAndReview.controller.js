@@ -92,6 +92,7 @@ const getAverageRating = asyncHandler(async (req, res) => {
 }
 });
 
+//generate reviews for all courses to display on homepage based sorted through descending order
 const getAllRatingsAndReviews = asyncHandler(async (req, res) => {
   const { courseId } = req.params;
 

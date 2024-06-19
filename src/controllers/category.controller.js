@@ -1,3 +1,4 @@
+import { Course } from "../models/course.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
@@ -73,4 +74,41 @@ const getAllCategorys = asyncHandler(async (req, res) => {
     )
 })
 
-export { createCategory, deleteCategory, updateCategory, getAllCategorys }
+const getCategoryPageDetails = asyncHandler(async (req, res) => {
+    const {categoryId} = req.params;
+
+    const courses = await Category.findById(categoryId).populate("courses");
+
+    if(!courses) {
+        throw new ApiError(404, "Data not found !!");
+    }
+
+    const differentCategories = await Category.find({
+        _id: {$ne: categoryId}
+    }).populate("courses");
+
+    const topSellers = await Course.find().sort(
+        [
+            { "$project": {
+                "name": 1,
+                "description": 1,
+                "learnings": 1,
+                "sections": 1,
+                "ratingAndReviews": 1,
+                "studentsEnrolled": 1,
+                "thumbnail": 1,
+                "category": 1,
+                "instructor": 1,
+                "length": { "$size": "$studentsEnrolled" }
+            }},
+            { "$sort": { "length": -1 } },
+            { "$limit": 10 }
+        ],
+    )
+
+    return res.status(200).json(
+        new ApiResponse(200, {courses, differentCategories, topSellers}, "Courses data fetched sucessfully !!")
+    )
+})
+
+export { createCategory, deleteCategory, updateCategory, getAllCategorys, getCategoryPageDetails }
