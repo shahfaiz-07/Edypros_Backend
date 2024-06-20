@@ -1,9 +1,9 @@
-import { Course } from "../models/course.model";
-import { User } from "../models/user.model.js";
+import { Course } from "../models/course.model.js";
 import { RatingAndReview } from "../models/ratingAndReview.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
+import { mongoose } from 'mongoose';
 
 const createRating = asyncHandler(async (req, res) => {
   const { rating, review, reviewed } = req.body;
@@ -14,10 +14,10 @@ const createRating = asyncHandler(async (req, res) => {
 
   const enrolledStudent = await Course.findOne({
     _id: reviewed,
-    studentsEnrolled: { $elemMatch: { $eq: req.user?._id } },
+    studentsEnrolled: { $in: [req.user?._id] },
   });
 
-  if (enrolledStudent) {
+  if (!enrolledStudent) {
     throw new ApiError(404, "Student is not enrolled for this course !!");
   }
 
@@ -34,7 +34,7 @@ const createRating = asyncHandler(async (req, res) => {
     rating,
     review,
     reviewed,
-    user: req.user?._id,
+    reviewedBy: req.user?._id,
   });
 
   if (!ratingAndReview) {
@@ -64,18 +64,18 @@ const createRating = asyncHandler(async (req, res) => {
 const getAverageRating = asyncHandler(async (req, res) => {
   try {
     const {courseId}=req.body;
-    const result= await RatingAndReview.aggregate([
-        {
-            $match:{
-                course:new mongoose.Types.ObjectId(courseId),
-            }
+    const result = await RatingAndReview.aggregate([
+      {
+        $match: {
+          reviewed: new mongoose.Types.ObjectId(courseId),
         },
-        {
-            $group:{
-                _id:null,
-                averageRating: {$avg:"$rating"}
-            }
-        }
+      },
+      {
+        $group: {
+          _id: null,
+          averageRating: { $avg: "$rating" },
+        },
+      },
     ]);
 
     if(result.length > 0) {
@@ -93,10 +93,10 @@ const getAverageRating = asyncHandler(async (req, res) => {
 });
 
 //generate reviews for all courses to display on homepage based sorted through descending order
-const getAllRatingsAndReviews = asyncHandler(async (req, res) => {
+const getAllCourseRatingsAndReviews = asyncHandler(async (req, res) => {
   const { courseId } = req.params;
 
-  const ratingsAndReviews = await RatingAndReview.find({ reviewed: courseId });
+  const ratingsAndReviews = await RatingAndReview.find({ reviewed: courseId }).populate("reviewedBy");
 
   if(!ratingsAndReviews) {
     throw new ApiError(404, "No ratings and reviews found !!");
@@ -107,4 +107,16 @@ const getAllRatingsAndReviews = asyncHandler(async (req, res) => {
   )
 });
 
-export {createRating, getAverageRating, getAllRatingsAndReviews};
+const getTopRatingsAndReviews = asyncHandler(async (req, res) => {
+  const ratingsAndReviews = await RatingAndReview.find({}).populate("reviewedBy");
+
+  if(!ratingsAndReviews) {
+    throw new ApiError(404, "No ratings and reviews found !!")
+  }
+
+  return res.status(200).json(
+    new ApiResponse(200, ratingsAndReviews, "Top ratings and reviews fetched successfully !!")
+  )
+})
+
+export {createRating, getAverageRating, getAllCourseRatingsAndReviews, getTopRatingsAndReviews};

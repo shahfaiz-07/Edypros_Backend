@@ -1,10 +1,14 @@
 import { Router } from "express";
 import { isAdmin, verifyJWT } from "../middlewares/auth.middleware.js";
-import { createCategory, getAllCategorys } from "../controllers/category.controller.js";
+import {
+  createCategory,
+  getAllCategorys,
+  getCategoryPageDetails,
+} from "../controllers/category.controller.js";
 
 const router = Router();
 
-router.route('/get-categories').get(getAllCategorys);
-router.route('/create').post(verifyJWT, isAdmin, createCategory)
+router.route("/").get(getAllCategorys).post(verifyJWT, isAdmin, createCategory);
+router.route('/:cateogryId').get(getCategoryPageDetails);
 
 export default router;

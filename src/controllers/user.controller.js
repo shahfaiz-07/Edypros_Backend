@@ -88,7 +88,7 @@ const register = asyncHandler(async (req, res) => {
   const recentOTP = await OTP.find({email}).sort({createdAt: -1}).limit(1);
   console.log(recentOTP);
 
-  if(!recentOTP) {
+  if(!recentOTP[0]) {
     throw new ApiError(404, "Otp Expired !! Re Generate !!");
   }
   console.log(recentOTP)

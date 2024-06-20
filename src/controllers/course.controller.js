@@ -3,7 +3,7 @@ import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { removeFromCloudinary, uploadOnCloudinary } from "../utils/cloudinary.js";
 import { Course } from "../models/course.model.js";
-import { isValidObjectId, model } from "mongoose";
+import { isValidObjectId } from "mongoose";
 import { Category } from "./../models/category.model.js";
 import { User } from "../models/user.model.js";
 import { Section } from "../models/section.model.js";
@@ -112,6 +112,7 @@ const getCourseById = asyncHandler(async (req, res) => {
 
   const course = await Course.findById(courseId)
     .populate("instructor")
+    .populate("studentsEnrolled")
     // .populate("ratingsAndReviews")
     .populate("category")
     .populate({
@@ -298,6 +299,54 @@ const updateCourseThumbnail = asyncHandler(async (req, res) => {
   )
 })
 
+const demoEnrollStudent = asyncHandler(async (req, res) => {
+  const { courseId } = req.params;
+
+  if(!courseId) {
+    throw new ApiError(400, "Course ID is required !!");
+  }
+
+  if(!isValidObjectId(courseId)) {
+    throw new ApiError(400, "Invalid object id!!")
+  }
+
+  const course = await Course.findByIdAndUpdate(
+    courseId,
+    {
+      $push: {
+        studentsEnrolled: req.user?._id
+      }
+    },
+    {
+      new: true
+    }
+  ).populate("studentsEnrolled").populate("instructor");
+
+  if(!course) {
+    throw new ApiError(404, "Cannot find course !!")
+  }
+
+  const user = await User.findByIdAndUpdate(
+    req.user._id,
+    {
+      $push: {
+        registeredCourses: course._id
+      }
+    },
+    {
+      new: true
+    }
+  ).populate("registeredCourses");
+
+  if(!user) {
+    throw new ApiError(500, "Cannot register course into student DB !!")
+  }
+
+  return res.status(200).json(
+    new ApiResponse(200, {user, course}, "Student enrolled into course successfully !!")
+  )
+})
+
 export {
   createCourse,
   getCoursesByCategory,
@@ -306,5 +355,6 @@ export {
   getCourseByTitle,
   updateCourse,
   deleteCourse,
-  updateCourseThumbnail
+  updateCourseThumbnail,
+  demoEnrollStudent
 };

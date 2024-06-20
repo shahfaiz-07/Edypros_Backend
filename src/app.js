@@ -20,6 +20,7 @@ import categoryRouter from './routes/category.routes.js'
 import courseRouter from './routes/course.routes.js'
 import sectionRouter from './routes/section.routes.js'
 import videoRouter from './routes/video.routes.js'
+import ratingAndReviewRouter from './routes/ratingAndReview.routes.js'
 
 app.use('/api/v1/users', userRouter);
 app.use('/api/v1/profile', profileRouter);
@@ -27,4 +28,6 @@ app.use('/api/v1/category', categoryRouter);
 app.use('/api/v1/courses', courseRouter);
 app.use('/api/v1/section', sectionRouter);
 app.use('/api/v1/video', videoRouter);
+app.use('/api/v1/ratings-and-reviews', ratingAndReviewRouter);
+
 export { app }

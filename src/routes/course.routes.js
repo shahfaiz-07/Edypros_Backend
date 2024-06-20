@@ -1,5 +1,9 @@
 import { Router } from "express";
-import { isInstructor, verifyJWT } from "../middlewares/auth.middleware.js";
+import {
+  isInstructor,
+  isStudent,
+  verifyJWT,
+} from "../middlewares/auth.middleware.js";
 import {
   createCourse,
   deleteCourse,
@@ -8,6 +12,7 @@ import {
   updateCourse,
   updateCourseThumbnail,
   getCoursesByCategory,
+  demoEnrollStudent,
 } from "../controllers/course.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
 
@@ -25,7 +30,11 @@ router
   .get(verifyJWT, getCourseById)
   .delete(verifyJWT, isInstructor, deleteCourse)
   .patch(verifyJWT, isInstructor, updateCourse);
-  
+
+router
+  .route("/enroll/:courseId")
+  .patch(verifyJWT, isStudent, demoEnrollStudent);
+
 router
   .route("/thumbnail/:courseId")
   .patch(

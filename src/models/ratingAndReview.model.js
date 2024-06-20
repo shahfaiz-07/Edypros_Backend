@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 
 const ratingAndReviewSchema = new mongoose.Schema({
-    user: {
+    reviewedBy: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
         required: true,
