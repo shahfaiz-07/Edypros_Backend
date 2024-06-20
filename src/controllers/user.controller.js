@@ -9,6 +9,8 @@ import { OTP } from '../models/otp.model.js';
 import { sendMail } from "../utils/mailSender.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import { Course } from "../models/course.model.js";
+import { resetPasswordLink } from "../utils/mail/templates/resetPasswordLink.js";
+import { passwordUpdated } from "../utils/mail/templates/passwordUpdated.js";
 
 const generateAccessAndRefreshTokens = async (userId) => {
   try {
@@ -284,9 +286,7 @@ const generateResetToken = asyncHandler(async (req, res) => {
 
   const url = `${process.env.FRONTEND_URI}/update-password/${passToken}`;
   await sendMail(email, "Edypros password reset link",
-    `<h3>Greetings User,</h3>
-    <p>Here is the like to reset your password : ${url}. Ignore this email if you haven't requested it.</p>
-    <p>Regards, <br/>Team Edypros.</p>`
+    resetPasswordLink(url)
   )
 
   return res.status(200).json(new ApiResponse(200, {}, "Password reset email sent successfully !!"))
@@ -325,6 +325,7 @@ const resetPassword = asyncHandler(async (req, res) => {
   //   throw new ApiError(500, "Failed to save updated password to DB !!");
   // }
 
+  await sendMail(user.email, "Edypros Password Updated", passwordUpdated(user.email, user.firstName))
   return res.status(200).json(
     new ApiResponse(200, user, "Password updated successfully !!")
   )
