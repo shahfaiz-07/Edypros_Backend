@@ -82,13 +82,13 @@ const getAllCourses = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, courses, "Courses fetched successfully !!"));
 });
 
-const getCoursesByTag = asyncHandler(async (req, res) => {
+const getCoursesByCategory = asyncHandler(async (req, res) => {
   const { category } = req.body;
   if (!category) {
     throw new ApiError(400, "Category is requried !!");
   }
 
-  const courses = await Category.findOne({ title: category }).select("courses");
+  const courses = await Category.findOne({ title: category }).populate("courses");
 
   if (!courses) {
     throw new ApiError(500, "Error while fetching courses from the DB !!");
@@ -163,10 +163,16 @@ const updateCourse = asyncHandler(async (req, res) => {
 
   if (
     [name, description, learnings, price, category].some(
-      (field) => field !== ""
+      (field) => field === ""
     )
   ) {
     throw new ApiError(400, "All fields are required !!");
+  }
+
+  const categoryObj = await Category.findOne({ title: category });
+  console.log(categoryObj)
+  if (!categoryObj) {
+    throw new ApiError(404, "Invalid category !!");
   }
 
   const course = await Course.findByIdAndUpdate(
@@ -176,13 +182,19 @@ const updateCourse = asyncHandler(async (req, res) => {
       description,
       learnings,
       price,
-      category,
+      category: categoryObj._id,
       tags,
     },
     {
       new: true,
     }
-  );
+  ).populate("category").populate({
+    path:"sections",
+    populate: {
+      path: "videos",
+      model: "Video"
+    }
+  });
 
   if (!course) {
     throw new ApiError(404, "Course not found !!");
@@ -241,12 +253,58 @@ const deleteCourse = asyncHandler(async (req, res) => {
   )
 })
 
+const updateCourseThumbnail = asyncHandler(async (req, res) => {
+  const { courseId } = req.params;
+  
+  if(!courseId) {
+    throw new ApiError(400, "Course ID is required !!");
+  }
+
+  if(!isValidObjectId(courseId)) {
+    throw new ApiError(400, "Invalid object id!!")
+  }
+
+  const thumbnailLocalPath = req.file?.path;
+
+  if(!thumbnailLocalPath) {
+    throw new ApiError(400, "Thumbnail file is required !!");
+  }
+
+  const thumbnail = await uploadOnCloudinary(thumbnailLocalPath);
+
+  if(!thumbnail) {
+    throw new ApiError(500, "Error while uploading to cloudinary !!");
+  }
+
+  const course = await Course.findByIdAndUpdate(
+    courseId,
+    {
+      $set: {
+        thumbnail: thumbnail.secure_url
+      }
+    }
+  )
+
+  if(!course) {
+    throw new ApiError(500, "Error while updating thumbnail !!")
+  }
+
+  await removeFromCloudinary(course.thumbnail)
+
+  course.thumbnail = thumbnail.secure_url
+
+  return res.status(200).json(
+    new ApiResponse(200, course, "Course thumbnail updated successfully !!")
+  )
+})
+
 export {
   createCourse,
-  getCoursesByTag,
+  getCoursesByCategory,
   getAllCourses,
   getCourseById,
   getCourseByTitle,
   updateCourse,
-  deleteCourse
+  deleteCourse,
+  updateCourseThumbnail
 };

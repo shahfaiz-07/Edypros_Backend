@@ -24,7 +24,7 @@ import videoRouter from './routes/video.routes.js'
 app.use('/api/v1/users', userRouter);
 app.use('/api/v1/profile', profileRouter);
 app.use('/api/v1/category', categoryRouter);
-app.use('/api/v1/course', courseRouter);
+app.use('/api/v1/courses', courseRouter);
 app.use('/api/v1/section', sectionRouter);
 app.use('/api/v1/video', videoRouter);
 export { app }
