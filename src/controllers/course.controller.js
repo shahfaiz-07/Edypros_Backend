@@ -9,16 +9,17 @@ import { User } from "../models/user.model.js";
 import { Section } from "../models/section.model.js";
 import { Video } from "../models/video.model.js";
 const createCourse = asyncHandler(async (req, res) => {
-  const { name, description, learnings, price, category, tags } = req.body;
-  // console.log(req.body)
+  const { name, description, learnings, price, category, tags, preRequisites } = req.body;
+  console.log(req.body)
   // console.log(category, name, description)
+  console.log(req.body)
   if (
     !name || !description || !learnings || !price || !category
   ) {
     throw new ApiError(400, "All fields are required !!");
   }
   
-  const categoryObj = await Category.findOne({ title: category });
+  const categoryObj = await Category.findById(category);
   console.log(categoryObj)
   if (!categoryObj) {
     throw new ApiError(404, "Invalid category !!");
@@ -45,7 +46,8 @@ const createCourse = asyncHandler(async (req, res) => {
     thumbnail: thumbnail.url,
     category: categoryObj._id,
     instructor: req.user?._id,
-    tags,
+    tags: JSON.parse(tags),
+    preRequisites: JSON.parse(preRequisites)
   });
 
   if (!course) {
@@ -347,6 +349,26 @@ const demoEnrollStudent = asyncHandler(async (req, res) => {
   )
 })
 
+const getRegisteredCourses = asyncHandler(async (req, res) => {
+  const registeredCourses = await User.findById(
+    req.user?._id
+  ).select("registeredCourses").populate({
+    path: "registeredCourses",
+    populate: {
+      path: "instructor",
+      model: "User",
+      select: "firstName lastName"
+    }});
+
+  if(!registeredCourses) {
+    throw new ApiError(404, "Courses not found !!");
+  }
+
+  return res.status(200).json(
+    new ApiResponse(200, registeredCourses, "Registered Courses fetched successfully !!")
+  )
+})
+
 export {
   createCourse,
   getCoursesByCategory,
@@ -356,5 +378,6 @@ export {
   updateCourse,
   deleteCourse,
   updateCourseThumbnail,
-  demoEnrollStudent
+  demoEnrollStudent,
+  getRegisteredCourses
 };

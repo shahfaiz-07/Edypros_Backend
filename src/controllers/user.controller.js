@@ -56,27 +56,28 @@ const register = asyncHandler(async (req, res) => {
     firstName,
     lastName,
     email,
-    contactNumber,
     password,
     confirmPassword,
     accountType,
     otp
   } = req.body;
+  let contactNumber = req.body?.contactNumber || null;
+  console.log(req.body)
   if (
     [
       firstName,
       lastName,
       email,
-      contactNumber,
       password,
       confirmPassword,
       accountType,
       otp
-    ].some((field) => field === "")
+    ].some((field) => !(field.trim()))
   ) {
     throw new ApiError(400, "All fields are are required !!");
   }
 
+  console.log(req.body)
   if (password !== confirmPassword) {
     throw new ApiError(400, "Password and confirm password must match !!");
   }
@@ -401,7 +402,7 @@ const updateAvatar = asyncHandler(async (req, res) => {
 
   const avatar = await uploadOnCloudinary(avatarLocalPath);
 
-  if(!avatar.secure_url) {
+  if(!avatar) {
     throw new ApiError(500, "Error while uploading to cloudinary !!");
   }
 
@@ -437,4 +438,24 @@ const getUserDetails = asyncHandler(async (req, res) => {
   )
 })
 
-export {register, login, logout, refreshAccessToken, generateResetToken, changePassword, resetPassword, deleteAccount, getUserDetails, sendOTP, updateAvatar}
+const handleForm = asyncHandler(async (req, res) => {
+  const {firstName, lastName, email, contactNumber, message} = req.body;
+
+  if(!firstName || !email || !message) {
+    throw new ApiError(400, "Name, email and message are required !!");
+  }
+
+  await sendMail('edypros.owner@gmail.com', "Contact Us Form",
+    `<p>Name : ${firstName} ${lastName}<br/>
+    Email : ${email}<br/>
+    Contact Number : ${contactNumber}<br/></p>
+    Dear Admin,
+    <p>Message : ${message}</p>`
+  )
+
+  return res.status(200).json(
+    new ApiResponse(200, {}, "Email Sent Successfully !!")
+  )
+})
+
+export {register, login, logout, refreshAccessToken, generateResetToken, changePassword, resetPassword, deleteAccount, getUserDetails, sendOTP, updateAvatar, handleForm}

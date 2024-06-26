@@ -64,7 +64,7 @@ const updateCategory = asyncHandler(async (req, res) => {
 })
 
 const getAllCategorys = asyncHandler(async (req, res) => {
-    const allCategorys = await Category.find();
+    const allCategorys = await Category.find().select("title");
     if(!allCategorys) {
         throw new ApiError(500, "Error while fetching category from the DB !!");
     }

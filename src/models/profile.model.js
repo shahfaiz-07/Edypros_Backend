@@ -13,8 +13,7 @@ const profileSchema = new mongoose.Schema({
     },
     contactNumber: {
         type: String,
-        required: true,
-        trim: true
+        trim: true,
     }
 }, {timestamps : true});
 
