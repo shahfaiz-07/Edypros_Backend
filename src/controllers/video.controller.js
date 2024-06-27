@@ -5,6 +5,8 @@ import { Video } from "../models/video.model.js";
 import { ApiResponse } from '../utils/ApiResponse.js'
 import { Section } from './../models/section.model.js';
 import { isValidObjectId } from "mongoose";
+import { Course } from './../models/course.model.js';
+import { User } from "../models/user.model.js";
 
 const createVideo = asyncHandler(async (req, res) => {
     const { title, description, sectionId } = req.body;
@@ -56,8 +58,17 @@ const createVideo = asyncHandler(async (req, res) => {
         throw new ApiError(500, "Cannot add video file to section !!")
     }
 
+    const courseId = section.sectionOfCourse;
+    const course = await Course.findById(courseId).populate({
+        path: "sections",
+        populate: {
+            path: "videos",
+            model: "Video"
+        }
+    })
+
     return res.status(200).json(
-        new ApiResponse(200, section, "Video file uploaded successfully !!")
+        new ApiResponse(200, course, "Video file uploaded successfully !!")
     )
 })
 
@@ -73,7 +84,7 @@ const updateVideo = asyncHandler(async (req, res) => {
     }
 
     const {title, description} = req.body;
-
+    console.log(req.body)
     if(!title || !description) {
         throw new ApiError(400, "All fields are required !!");
     }
@@ -89,12 +100,63 @@ const updateVideo = asyncHandler(async (req, res) => {
         }
     ).populate("section");
 
+    
     if(!video) {
         throw new ApiError(500, "Unable to update video file data !!")
     }
+    const courseId = video.section.sectionOfCourse;
+    const course = await Course.findById(courseId).populate({
+        path: "sections",
+        populate: {
+            path: "videos",
+            model: "Video"
+        }
+    })
 
     return res.status(200).json(
-        new ApiResponse(200, video, "Video file updated sucessfully !!")
+        new ApiResponse(200, course, "Video file updated sucessfully !!")
+    );
+})
+
+const updateVideoURL = asyncHandler(async (req, res) => {
+    const videoLocalPath = req.file?.path;
+    if(!videoLocalPath) {
+        throw new ApiError(400, "Video file is required !!");
+    }
+
+    const {videoId} = req.body;
+    if(!videoId) {
+        throw new ApiError(400, "Video Id is required !!")
+    }
+
+    if(!isValidObjectId(videoId)) {
+        throw new ApiError(404, "Invalid object ID !!");
+    }
+
+    const video = await Video.findById(videoId).populate("section");
+
+    if(!video) {
+        throw new ApiError(404, "Video not found !!");
+    }
+
+    await removeFromCloudinary(video.url, "video");
+
+    const newUrl = await uploadOnCloudinary(videoLocalPath);
+    video.url = newUrl.secure_url;
+    await video.save();
+
+    const courseId = video.section.sectionOfCourse;
+    const course = await Course.findById(courseId).populate({
+        path: "sections",
+        populate: {
+            path: "videos",
+            model: "Video"
+        }
+    })
+    // if(!course) 
+
+    return res.status(200).json(
+        new ApiResponse(200, course, "Video file updated sucessfully !!")
     );
 })
 
@@ -126,11 +188,19 @@ const deleteVideo = asyncHandler(async (req, res) => {
     section.videos = section.videos.filter((v) => v.toString() !== videoId.toString());
   
     await section.save();
+
+    const course = await Course.findById(section.sectionOfCourse).populate({
+        path: "sections",
+        populate: {
+            path: "videos",
+            model: "Video"
+        }
+    })
   
     return res.status(200).json(
-      new ApiResponse(200, video, "Video file deleted successfully !!")
+      new ApiResponse(200, course, "Video file deleted successfully !!")
     );
   });
   
 
-export {createVideo, updateVideo, deleteVideo}
+export {createVideo, updateVideo, deleteVideo, updateVideoURL}

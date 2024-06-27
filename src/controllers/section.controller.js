@@ -37,7 +37,13 @@ const createSection = asyncHandler(async (req, res) => {
     {
       new: true,
     }
-  ).populate("sections");
+  ).populate({
+    path: "sections",
+    populate: {
+      path: "videos",
+      model: "Video"
+    }
+  });
 
   if (!course) {
     throw new ApiError(500, "Error while updating section in course !!");
@@ -75,8 +81,17 @@ const updateSection = asyncHandler(async (req, res) => {
         throw new ApiError(500, "Unable to update section name !!");
     }
 
+    const updatedCourse = await Course.findById(section.sectionOfCourse).populate({
+      path: "sections",
+      populate: {
+        path: "videos",
+        model: "Video"
+      }
+    });
+
+
     return res.status(200).json(
-        new ApiResponse(200, section, "Section data updated successfully !!")
+        new ApiResponse(200, updatedCourse, "Section data updated successfully !!")
     )
 });
 
@@ -97,7 +112,13 @@ const deleteSection = asyncHandler(async(req, res) => {
         throw new ApiError(404, "Section not found !!");
     }
 
-    const course = await Course.findById(section.sectionOfCourse)
+    const course = await Course.findById(section.sectionOfCourse).populate({
+      path: "sections",
+      populate: {
+        path: "videos",
+        model: "Video"
+      }
+    })
 
     course.sections = course.sections.filter( (cSection) => cSection.toString() !== section._id.toString())
     await course.save();
@@ -108,7 +129,7 @@ const deleteSection = asyncHandler(async(req, res) => {
     }));
 
     return res.status(200).json(
-        new ApiResponse(200, section, "Section deleted successfully !!")
+        new ApiResponse(200, course, "Section deleted successfully !!")
     )
 })
 
