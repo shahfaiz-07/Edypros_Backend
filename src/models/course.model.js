@@ -57,7 +57,8 @@ const courseSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["Draft", "Published"]
+      enum: ["Draft", "Published"],
+      default: "Draft"
     },
     preRequisites: {
       type: [String]

@@ -13,6 +13,9 @@ import {
   updateCourseThumbnail,
   getCoursesByCategory,
   demoEnrollStudent,
+  changeCourseStatus,
+  getRegisteredCourses,
+  getInstructorRegisteredCourses,
 } from "../controllers/course.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
 
@@ -31,6 +34,8 @@ router
   .delete(verifyJWT, isInstructor, deleteCourse)
   .patch(verifyJWT, isInstructor, updateCourse);
 
+router.route("/status").patch(verifyJWT, isInstructor, changeCourseStatus);
+
 router
   .route("/enroll/:courseId")
   .patch(verifyJWT, isStudent, demoEnrollStudent);
@@ -43,5 +48,7 @@ router
     upload.single("thumbnail"),
     updateCourseThumbnail
   );
+
+router.route("/instructor/my-courses").get(verifyJWT, isInstructor, getInstructorRegisteredCourses);
 
 export default router;
