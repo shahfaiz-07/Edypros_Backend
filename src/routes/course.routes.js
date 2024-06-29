@@ -16,6 +16,7 @@ import {
   changeCourseStatus,
   getRegisteredCourses,
   getInstructorRegisteredCourses,
+  getCoursePreview,
 } from "../controllers/course.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
 
@@ -48,6 +49,8 @@ router
     upload.single("thumbnail"),
     updateCourseThumbnail
   );
+
+  router.route("/preview/:courseId").get(getCoursePreview);
 
 router.route("/instructor/my-courses").get(verifyJWT, isInstructor, getInstructorRegisteredCourses);
 

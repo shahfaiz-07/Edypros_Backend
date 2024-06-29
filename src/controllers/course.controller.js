@@ -105,14 +105,52 @@ const getCoursesByCategory = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, courses, "Courses fetched successfully !!"));
 });
 
+const getCoursePreview = asyncHandler(async (req, res) => {
+  const {courseId} = req.params;
+
+  console.log(`Course ID : ${courseId}`.bgGreen)
+
+  if (!courseId) {
+    throw new ApiError(400, "Course ID is required !!");
+  }
+
+  if (!isValidObjectId(courseId)) {
+    throw new ApiError(400, "Invalid course id !!");
+  }
+
+  const course = await Course.findById(courseId).populate([{
+    path: "sections",
+    populate: {
+      path: "videos",
+      model: "Video",
+      select: "title duration",
+    },
+  }, {
+    path: "instructor",
+    select: "firstName lastName avatar",
+    populate: {
+      path : "profile",
+      select: "about"
+    }
+  }, {
+    path: "category",
+    select: "title color"
+  }])
+  if (!course) {
+    throw new ApiError(500, "Cannot fetch course details !!");
+  }
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, course, "Course data fetched successfully !!"));
+})
+
 const getCourseById = asyncHandler(async (req, res) => {
   const { courseId } = req.params;
 
   if (!courseId) {
     throw new ApiError(400, "Course ID is required !!");
   }
-
-  console.log(courseId)
 
   if (!isValidObjectId(courseId)) {
     throw new ApiError(400, "Invalid course id !!");
@@ -477,4 +515,5 @@ export {
   getRegisteredCourses,
   changeCourseStatus,
   getInstructorRegisteredCourses,
+  getCoursePreview
 };

@@ -9,6 +9,6 @@ import {
 const router = Router();
 
 router.route("/").get(getAllCategorys).post(verifyJWT, isAdmin, createCategory);
-router.route('/:cateogryId').get(getCategoryPageDetails);
+router.route('/:categoryId').get(getCategoryPageDetails);
 
 export default router;

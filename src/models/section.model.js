@@ -5,7 +5,6 @@ const sectionSchema = new mongoose.Schema({
         type: String,
         required: true,
         trim: true,
-        unique: true
     },
     sectionOfCourse : {
         type: mongoose.Schema.Types.ObjectId,

@@ -11,6 +11,10 @@ const categorySchema = new mongoose.Schema({
   description: {
     type: String
   },
+  color: {
+    type: String,
+    default: "#AF1B3F"
+  },
   courses: [
     {
       type: mongoose.Schema.Types.ObjectId,
