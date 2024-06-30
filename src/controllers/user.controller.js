@@ -427,7 +427,7 @@ const updateAvatar = asyncHandler(async (req, res) => {
 })
 
 const getUserDetails = asyncHandler(async (req, res) => {
-  const userDetails = await User.findById(req.user?._id).select("-password -refreshToken").populate("profile").populate("registeredCourses");
+  const userDetails = await User.findById(req.user?._id).select("-password -refreshToken").populate("profile");
 
   if(!userDetails) {
     throw new ApiError(500, "Cannot fetch user data !!")

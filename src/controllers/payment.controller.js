@@ -92,11 +92,18 @@ const verifySignature = asyncHandler(async (req, res) => {
           { new: true }
         );
         //update the user
-        const user = await User.updateOne(
-          { _id: userId },
+        const user = await User.findByIdAndUpdate(
+          userId,
           { $push: { registeredCourses: course_id } },
           { new: true }
         );
+        // if item was on wishlist remove it
+        if(user.wishlist.includes(course_id)) {
+          console.log(`UPDATING WISHLIST FOR COURSE ID : ${course_id}`.bgCyan)
+          user.wishlist = user.wishlist.filter( (courseID) => courseID.toString() !== course_id.toString() )
+        }
+
+        await user.save()
         //set course progress
         const newCourseProgress = new CourseProgress({
           userId: userId,

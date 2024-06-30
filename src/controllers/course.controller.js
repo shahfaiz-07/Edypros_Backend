@@ -108,8 +108,6 @@ const getCoursesByCategory = asyncHandler(async (req, res) => {
 const getCoursePreview = asyncHandler(async (req, res) => {
   const {courseId} = req.params;
 
-  console.log(`Course ID : ${courseId}`.bgGreen)
-
   if (!courseId) {
     throw new ApiError(400, "Course ID is required !!");
   }
@@ -373,73 +371,21 @@ const updateCourseThumbnail = asyncHandler(async (req, res) => {
     );
 });
 
-const demoEnrollStudent = asyncHandler(async (req, res) => {
-  const { courseId } = req.params;
-
-  if (!courseId) {
-    throw new ApiError(400, "Course ID is required !!");
-  }
-
-  if (!isValidObjectId(courseId)) {
-    throw new ApiError(400, "Invalid object id!!");
-  }
-
-  const course = await Course.findByIdAndUpdate(
-    courseId,
-    {
-      $push: {
-        studentsEnrolled: req.user?._id,
-      },
-    },
-    {
-      new: true,
-    }
-  )
-    .populate("studentsEnrolled")
-    .populate("instructor");
-
-  if (!course) {
-    throw new ApiError(404, "Cannot find course !!");
-  }
-
-  const user = await User.findByIdAndUpdate(
-    req.user._id,
-    {
-      $push: {
-        registeredCourses: course._id,
-      },
-    },
-    {
-      new: true,
-    }
-  ).populate("registeredCourses");
-
-  if (!user) {
-    throw new ApiError(500, "Cannot register course into student DB !!");
-  }
-
-  return res
-    .status(200)
-    .json(
-      new ApiResponse(
-        200,
-        { user, course },
-        "Student enrolled into course successfully !!"
-      )
-    );
-});
-
 const getRegisteredCourses = asyncHandler(async (req, res) => {
   const registeredCourses = await User.findById(req.user?._id)
     .select("registeredCourses")
     .populate({
       path: "registeredCourses",
       // select: "instructor studentsEnrolled",
-      populate: {
+      populate: [{
         path: "instructor",
         model: "User",
         select: "firstName lastName",
-      },
+      },{
+        path: "category",
+        model: "Category",
+        select: "title color"
+      }],
     });
 
   if (!registeredCourses) {
@@ -511,7 +457,6 @@ export {
   updateCourse,
   deleteCourse,
   updateCourseThumbnail,
-  demoEnrollStudent,
   getRegisteredCourses,
   changeCourseStatus,
   getInstructorRegisteredCourses,

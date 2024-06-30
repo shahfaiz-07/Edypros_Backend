@@ -156,11 +156,15 @@ const removeCourseFromWishlist = asyncHandler(async (req, res) => {
 const getWishlistData = asyncHandler(async (req, res) => {
   const wishlist = await User.findById(req.user?._id).select("wishlist").populate({
     path: "wishlist",
-    populate: {
+    populate: [{
       path: "instructor",
       model: "User",
       select: "firstName lastName"
-    }
+    },{
+      path: "category",
+      model: "Category",
+      select: "title color"
+    }]
   });
   return res.status(200).json(
     new ApiResponse(200, wishlist, "Wishlist Fetched Successfully !!")

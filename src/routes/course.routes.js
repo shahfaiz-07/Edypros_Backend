@@ -12,7 +12,6 @@ import {
   updateCourse,
   updateCourseThumbnail,
   getCoursesByCategory,
-  demoEnrollStudent,
   changeCourseStatus,
   getRegisteredCourses,
   getInstructorRegisteredCourses,
@@ -36,10 +35,6 @@ router
   .patch(verifyJWT, isInstructor, updateCourse);
 
 router.route("/status").patch(verifyJWT, isInstructor, changeCourseStatus);
-
-router
-  .route("/enroll/:courseId")
-  .patch(verifyJWT, isStudent, demoEnrollStudent);
 
 router
   .route("/thumbnail/:courseId")
