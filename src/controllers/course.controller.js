@@ -385,6 +385,15 @@ const getRegisteredCourses = asyncHandler(async (req, res) => {
         path: "category",
         model: "Category",
         select: "title color"
+      }, {
+        path: "sections",
+        model: "Section",
+        select: "videos",
+        populate: {
+          path: "videos",
+          model: "Video",
+          select: "duration"
+        }
       }],
     });
 
