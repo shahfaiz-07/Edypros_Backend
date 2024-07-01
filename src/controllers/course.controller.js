@@ -354,6 +354,12 @@ const updateCourseThumbnail = asyncHandler(async (req, res) => {
     $set: {
       thumbnail: thumbnail.secure_url,
     },
+  }).populate({
+    path: "sections",
+    populate: {
+      path: "videos",
+      model: "Video"
+    }
   });
 
   if (!course) {
@@ -394,6 +400,9 @@ const getRegisteredCourses = asyncHandler(async (req, res) => {
           model: "Video",
           select: "duration"
         }
+      }, {
+        path: "ratingAndReviews",
+        model: "RatingAndReview"
       }],
     });
 
@@ -413,7 +422,14 @@ const getRegisteredCourses = asyncHandler(async (req, res) => {
 });
 
 const getInstructorRegisteredCourses = asyncHandler(async (req, res) => {
-  const courses = await Course.find({ instructor: req.user?.id });
+  const courses = await Course.find({ instructor: req.user?.id }).populate({
+    path: "sections",
+    select: "videos",
+    populate: {
+      path: "videos",
+      select: "duration"
+    }
+  });
 
   return res
     .status(200)

@@ -164,6 +164,9 @@ const getWishlistData = asyncHandler(async (req, res) => {
       path: "category",
       model: "Category",
       select: "title color"
+    }, {
+      path: "ratingAndReviews",
+      select: "rating"
     }]
   });
   return res.status(200).json(
