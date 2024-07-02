@@ -16,6 +16,7 @@ import {
   getRegisteredCourses,
   getInstructorRegisteredCourses,
   getCoursePreview,
+  getCourseData,
 } from "../controllers/course.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
 
@@ -49,4 +50,5 @@ router
 
 router.route("/instructor/my-courses").get(verifyJWT, isInstructor, getInstructorRegisteredCourses);
 
+router.route("/view-course").post(verifyJWT, isStudent, getCourseData);
 export default router;

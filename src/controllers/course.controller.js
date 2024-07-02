@@ -11,6 +11,8 @@ import { Category } from "./../models/category.model.js";
 import { User } from "../models/user.model.js";
 import { Section } from "../models/section.model.js";
 import { Video } from "../models/video.model.js";
+import { CourseProgress } from './../models/courseProgress.model.js';
+import { RatingAndReview } from "../models/ratingAndReview.model.js";
 const createCourse = asyncHandler(async (req, res) => {
   const { name, description, learnings, price, category, tags, preRequisites } =
     req.body;
@@ -106,7 +108,7 @@ const getCoursesByCategory = asyncHandler(async (req, res) => {
 });
 
 const getCoursePreview = asyncHandler(async (req, res) => {
-  const {courseId} = req.params;
+  const { courseId } = req.params;
 
   if (!courseId) {
     throw new ApiError(400, "Course ID is required !!");
@@ -116,24 +118,28 @@ const getCoursePreview = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Invalid course id !!");
   }
 
-  const course = await Course.findById(courseId).populate([{
-    path: "sections",
-    populate: {
-      path: "videos",
-      model: "Video",
-      select: "title duration",
+  const course = await Course.findById(courseId).populate([
+    {
+      path: "sections",
+      populate: {
+        path: "videos",
+        model: "Video",
+        select: "title duration",
+      },
     },
-  }, {
-    path: "instructor",
-    select: "firstName lastName avatar",
-    populate: {
-      path : "profile",
-      select: "about"
-    }
-  }, {
-    path: "category",
-    select: "title color"
-  }])
+    {
+      path: "instructor",
+      select: "firstName lastName avatar",
+      populate: {
+        path: "profile",
+        select: "about",
+      },
+    },
+    {
+      path: "category",
+      select: "title color",
+    },
+  ]);
   if (!course) {
     throw new ApiError(500, "Cannot fetch course details !!");
   }
@@ -141,7 +147,7 @@ const getCoursePreview = asyncHandler(async (req, res) => {
   return res
     .status(200)
     .json(new ApiResponse(200, course, "Course data fetched successfully !!"));
-})
+});
 
 const getCourseById = asyncHandler(async (req, res) => {
   const { courseId } = req.params;
@@ -198,7 +204,8 @@ const updateCourse = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Invalid course id !!");
   }
 
-  const { name, description, learnings, price, category, tags, preRequisites } = req.body;
+  const { name, description, learnings, price, category, tags, preRequisites } =
+    req.body;
 
   if (
     [name, description, learnings, price, category].some(
@@ -244,13 +251,15 @@ const updateCourse = asyncHandler(async (req, res) => {
     path: "sections",
     populate: {
       path: "videos",
-      model: "Video"
-    }
-  })
+      model: "Video",
+    },
+  });
 
   return res
     .status(200)
-    .json(new ApiResponse(200, updatedCourse, "Course data updated sucessfully !!"));
+    .json(
+      new ApiResponse(200, updatedCourse, "Course data updated sucessfully !!")
+    );
 });
 
 const deleteCourse = asyncHandler(async (req, res) => {
@@ -358,8 +367,8 @@ const updateCourseThumbnail = asyncHandler(async (req, res) => {
     path: "sections",
     populate: {
       path: "videos",
-      model: "Video"
-    }
+      model: "Video",
+    },
   });
 
   if (!course) {
@@ -383,31 +392,71 @@ const getRegisteredCourses = asyncHandler(async (req, res) => {
     .populate({
       path: "registeredCourses",
       // select: "instructor studentsEnrolled",
-      populate: [{
+      populate: [
+        {
+          path: "instructor",
+          model: "User",
+          select: "firstName lastName",
+        },
+        {
+          path: "category",
+          model: "Category",
+          select: "title color",
+        },
+        {
+          path: "sections",
+          model: "Section",
+          select: "videos",
+          populate: {
+            path: "videos",
+            model: "Video",
+            select: "duration",
+          },
+        },
+        {
+          path: "ratingAndReviews",
+          model: "RatingAndReview",
+        },
+      ],
+    });
+    console.log(registeredCourses)
+  if (!registeredCourses) {
+    throw new ApiError(404, "Courses not found !!");
+  }
+
+  const courseProgress = await CourseProgress.find({
+    userId: req.user?._id
+  }).populate({
+    path: "courseId",
+    populate: [
+      {
         path: "instructor",
         model: "User",
         select: "firstName lastName",
-      },{
+      },
+      {
         path: "category",
         model: "Category",
-        select: "title color"
-      }, {
+        select: "title color",
+      },
+      {
         path: "sections",
         model: "Section",
         select: "videos",
         populate: {
           path: "videos",
           model: "Video",
-          select: "duration"
-        }
-      }, {
+          select: "duration",
+        },
+      },
+      {
         path: "ratingAndReviews",
-        model: "RatingAndReview"
-      }],
-    });
-
-  if (!registeredCourses) {
-    throw new ApiError(404, "Courses not found !!");
+        model: "RatingAndReview",
+      },
+    ],
+  })
+  if(courseProgress.length !== registeredCourses.registeredCourses.length) {
+    throw new ApiError(500, "Unable to fetch course progress data!!")
   }
 
   return res
@@ -415,7 +464,7 @@ const getRegisteredCourses = asyncHandler(async (req, res) => {
     .json(
       new ApiResponse(
         200,
-        registeredCourses,
+        courseProgress,
         "Registered Courses fetched successfully !!"
       )
     );
@@ -427,8 +476,8 @@ const getInstructorRegisteredCourses = asyncHandler(async (req, res) => {
     select: "videos",
     populate: {
       path: "videos",
-      select: "duration"
-    }
+      select: "duration",
+    },
   });
 
   return res
@@ -473,6 +522,51 @@ const changeCourseStatus = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, {}, "Course status updated !!"));
 });
 
+const getCourseData = asyncHandler(async (req, res) => {
+  const { courseId } = req.body;
+
+  if(!courseId) {
+    throw new ApiError(400, "CourseID is required !!")
+  }
+
+  const course = await Course.findById(courseId).populate([
+    {
+      path: "sections",
+      model: "Section",
+      populate: {
+        path: "videos",
+        model: "Video",
+      },
+    },
+  ]);
+
+  if(!course) {
+    throw new ApiError(404, "Course not found !!")
+  }
+
+  if(!course.studentsEnrolled.includes(req.user?._id)) {
+    throw new ApiError(401, "You are not enrolled in this course !!")
+  }
+
+  const courseProgress = await CourseProgress.findOne({
+    userId: req.user?._id,
+    courseId: course._id
+  });
+
+  if(!courseProgress) {
+    throw new ApiError(404, "Cannot fetch course progress")
+  }
+
+  const ratingAndReview = await RatingAndReview.findOne({
+    reviewed : courseId,
+    reviewedBy : req.user?._id
+  })
+
+  return res.status(200).json(
+    new ApiResponse(200, {course, courseProgress, ratingAndReview : ratingAndReview || null}, "Course Details Fetched Successfully !!")
+  )
+});
+
 export {
   createCourse,
   getCoursesByCategory,
@@ -485,5 +579,6 @@ export {
   getRegisteredCourses,
   changeCourseStatus,
   getInstructorRegisteredCourses,
-  getCoursePreview
+  getCoursePreview,
+  getCourseData
 };

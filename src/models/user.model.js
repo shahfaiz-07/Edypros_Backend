@@ -53,12 +53,6 @@ const userSchema = new mongoose.Schema(
       ref: "Profile",
       required: true,
     },
-    courseProgress: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "CourseProgress",
-      },
-    ],
     isActive: {
       type: Boolean,
       default: true,

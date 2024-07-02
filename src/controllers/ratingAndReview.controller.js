@@ -29,11 +29,11 @@ const createRating = asyncHandler(async (req, res) => {
   if (alreadyReviewed) {
     throw new ApiError(403, "Student has already reviewed the course !!");
   }
-
+  const reviewedId = new mongoose.Types.ObjectId(reviewed)
   const ratingAndReview = await RatingAndReview.create({
     rating,
     review,
-    reviewed,
+    reviewed: reviewedId,
     reviewedBy: req.user?._id,
   });
 
@@ -60,6 +60,40 @@ const createRating = asyncHandler(async (req, res) => {
       new ApiResponse(200, ratingAndReview, "Rating created successfully !!")
     );
 });
+
+const editRating = asyncHandler(async (req, res) => {
+  const {rating, review, courseId} = req.body;
+
+  if (!rating || !review || !courseId) {
+    throw new ApiError(400, "All feilds are required !!");
+  }
+
+  const enrolledStudent = await Course.findOne({
+    _id: courseId,
+    studentsEnrolled: { $in: [req.user?._id] },
+  });
+
+  if (!enrolledStudent) {
+    throw new ApiError(404, "Student is not enrolled for this course !!");
+  }
+
+  const previousReview = await RatingAndReview.findOne({
+    reviewed: new mongoose.Types.ObjectId(courseId),
+    reviewedBy: req.user?._id,
+  })
+
+  if(!previousReview) {
+    throw new ApiError(404, "Review not found !!");
+  }
+
+  previousReview.rating = rating;
+  previousReview.review = review;
+  await previousReview.save();
+
+  return res.status(200).json(
+    new ApiResponse(200, previousReview, "Review edited successfully !!")
+  )
+})
 
 const getAverageRating = asyncHandler(async (req, res) => {
   try {
@@ -119,4 +153,4 @@ const getTopRatingsAndReviews = asyncHandler(async (req, res) => {
   )
 })
 
-export {createRating, getAverageRating, getAllCourseRatingsAndReviews, getTopRatingsAndReviews};
+export {createRating, getAverageRating, getAllCourseRatingsAndReviews, getTopRatingsAndReviews, editRating};
