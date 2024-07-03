@@ -174,4 +174,42 @@ const getWishlistData = asyncHandler(async (req, res) => {
   )
 })
 
-export {updateProfile, upgradeToInstructor, addToWishlist, removeCourseFromWishlist, getWishlistData};
+const getInstructorDashboardData = asyncHandler(async (req, res) => {
+  const courses = await Course.find({instructor : req.user?._id, status: "Published"}).populate([
+    {
+      path: "ratingAndReviews"
+    },{
+      path: "category"
+    }
+  ]);
+
+  const draftCourses = await Course.find({instructor : req.user?._id, status: "Draft"}).populate({
+    path: "category",
+    select: "title color"
+  })
+
+  const courseData = courses.map( (course) => {
+    const studentsEnrolled = course.studentsEnrolled.length;
+    const courseRevenue = studentsEnrolled * course.price;
+
+    return {
+      _id : course._id,
+      name : course.name,
+      description : course.description,
+      studentsEnrolled,
+      courseRevenue,
+      price : course.price,
+      category : {
+        title : course.category.title,
+        color : course.category.color,
+      },
+      thumbnail : course.thumbnail,
+      ratingAndReviews : course.ratingAndReviews
+    }
+  })
+  return res.status(200).json(
+    new ApiResponse(200, {publishedCourses : courseData, draftCourses}, "Dashbord data fetched successfully !!")
+  )
+})
+
+export {updateProfile, upgradeToInstructor, addToWishlist, removeCourseFromWishlist, getWishlistData, getInstructorDashboardData};

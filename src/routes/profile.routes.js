@@ -1,7 +1,8 @@
 import { Router } from "express";
-import { isStudent, verifyJWT } from "../middlewares/auth.middleware.js";
+import { isInstructor, isStudent, verifyJWT } from "../middlewares/auth.middleware.js";
 import {
   addToWishlist,
+  getInstructorDashboardData,
   getWishlistData,
   removeCourseFromWishlist,
   updateProfile,
@@ -19,5 +20,6 @@ router
   .get(isStudent, getWishlistData)
   .patch(isStudent, addToWishlist)
   .delete(isStudent, removeCourseFromWishlist);
+router.route("/instructor-dashboard").get(isInstructor, getInstructorDashboardData);
 
 export default router;

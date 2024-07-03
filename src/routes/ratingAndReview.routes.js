@@ -13,8 +13,9 @@ const router = Router();
 router
   .route("/")
   .post(verifyJWT, isStudent, createRating)
-  .patch(verifyJWT, isStudent, editRating)
-  .get(getTopRatingsAndReviews);
+  .patch(verifyJWT, isStudent, editRating);
+
+router.route("/top-ratings").get(getTopRatingsAndReviews);
 
 router.route("/c/:courseId").get(getAllCourseRatingsAndReviews);
 

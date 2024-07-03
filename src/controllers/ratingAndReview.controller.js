@@ -130,7 +130,15 @@ const getAverageRating = asyncHandler(async (req, res) => {
 const getAllCourseRatingsAndReviews = asyncHandler(async (req, res) => {
   const { courseId } = req.params;
 
-  const ratingsAndReviews = await RatingAndReview.find({ reviewed: courseId }).populate("reviewedBy");
+  const ratingsAndReviews = await RatingAndReview.find({ reviewed: courseId }).populate([
+    {
+      path: "reviewed",
+      select: "name"
+    },{
+      path: "reviewedBy",
+      select: "firstName lastName avatar"
+    }
+  ]).sort({rating: -1}).limit(10);
 
   if(!ratingsAndReviews) {
     throw new ApiError(404, "No ratings and reviews found !!");
@@ -141,8 +149,17 @@ const getAllCourseRatingsAndReviews = asyncHandler(async (req, res) => {
   )
 });
 
-const getTopRatingsAndReviews = asyncHandler(async (req, res) => {
-  const ratingsAndReviews = await RatingAndReview.find({}).populate("reviewedBy");
+const getTopRatingsAndReviews = asyncHandler(async (_, res) => {
+  const ratingsAndReviews = await RatingAndReview.find({})
+  .populate([
+    {
+      path: "reviewed",
+      select: "name"
+    },{
+      path: "reviewedBy",
+      select: "firstName lastName avatar"
+    }
+  ]).sort({rating: -1}).limit(10);
 
   if(!ratingsAndReviews) {
     throw new ApiError(404, "No ratings and reviews found !!")

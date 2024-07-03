@@ -128,6 +128,10 @@ const getCoursePreview = asyncHandler(async (req, res) => {
       },
     },
     {
+      path: "ratingAndReviews",
+      select: "rating"
+    },
+    {
       path: "instructor",
       select: "firstName lastName avatar",
       populate: {
@@ -471,14 +475,17 @@ const getRegisteredCourses = asyncHandler(async (req, res) => {
 });
 
 const getInstructorRegisteredCourses = asyncHandler(async (req, res) => {
-  const courses = await Course.find({ instructor: req.user?.id }).populate({
+  const courses = await Course.find({ instructor: req.user?.id }).populate([{
     path: "sections",
     select: "videos",
     populate: {
       path: "videos",
       select: "duration",
     },
-  });
+  },{
+    path: "category",
+    select: "title color"
+  }]);
 
   return res
     .status(200)
