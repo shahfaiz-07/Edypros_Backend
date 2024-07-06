@@ -155,7 +155,7 @@ const getCoursePreview = asyncHandler(async (req, res) => {
       },
       {
         path: "instructor",
-        select: "firstName lastName avatar",
+        select: "firstName lastName avatar createdAt",
         populate: {
           path: "profile",
           select: "about",
