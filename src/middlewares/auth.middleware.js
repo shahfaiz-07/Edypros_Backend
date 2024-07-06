@@ -9,7 +9,6 @@ const verifyJWT = asyncHandler(async (req, _, next) => {
       req.cookies?.accessToken ??
       req.header("Authorization")?.replace("Bearer ", "");
     
-      console.log("AUTHORIZATION TOKEN ....", req.header("Authorization"))
     if (!token) {
       throw new ApiError(403, "Unauthorized Request !!");
     }
@@ -19,8 +18,6 @@ const verifyJWT = asyncHandler(async (req, _, next) => {
     const user = await User.findById(decodedToken?._id).select(
       "-password -refreshToken"
     ).populate("profile");
-
-    // console.log("AUTHORIZATION USER ...", user)
 
     if (!user) {
       throw new ApiError(401, "Invalid Access Token");

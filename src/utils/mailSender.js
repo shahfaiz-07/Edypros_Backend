@@ -16,7 +16,6 @@ export const sendMail = async (to, subject, body) => {
             subject,
             html: body
         });
-        console.log(info)
     } catch(err) {
         console.log(`Some Error Occured while sending email !!`.bgRed);
         console.error(`ERROR : ${err.message}`);

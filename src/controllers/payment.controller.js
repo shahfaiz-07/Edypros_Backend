@@ -174,8 +174,15 @@ const sendPaymentSuccessEmail = asyncHandler(async (req, res) => {
   const {orderId, paymentId, amount} = req.body;
   const userId = req.user?._id;
   console.log(req.body)
-  if(!orderId || !paymentId || !amount || !userId) {
-    throw new ApiError(400, "All Fields are required !!")
+  try {
+    if(!orderId || !paymentId || !amount || !userId) {
+      throw new ApiError(400, "All Fields are required !!")
+    }
+  } catch (error) {
+    console.log(`${error.message}`.bgRed)
+    return res.status(error.statusCode).json(
+      new ApiResponse(error.statusCode, null, error.message)
+    )
   }
 
   try {

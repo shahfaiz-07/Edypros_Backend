@@ -67,7 +67,7 @@ export const paymentSuccess = (amount, paymentId, orderId, name,lastname) => {
     
     <body>
         <div class="container">
-            <a href="http://localhost:3000"><img class="logo" src="https://res.cloudinary.com/cloudjerry07/image/upload/v1718883581/Edypros/logos/vo34zouqrmxod7r738ir.png"
+            <a href="${process.env.FRONTEND_URI}"><img class="logo" src="https://res.cloudinary.com/cloudjerry07/image/upload/v1718883581/Edypros/logos/vo34zouqrmxod7r738ir.png"
                     alt="Edypros Logo"></a>
             <div class="message">
             Your payment of ₹${amount} has been successfully received.
