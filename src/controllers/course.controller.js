@@ -580,22 +580,11 @@ const changeCourseStatus = asyncHandler(async (req, res) => {
     if (!isValidObjectId(courseId)) {
       throw new ApiError(400, "Invalid Course ID !!");
     }
-  
-    const course = await Course.findByIdAndUpdate(
-      courseId,
-      {
-        status,
-      },
-      {
-        new: true,
-      }
-    ).populate({
-      path: "sections",
-      populate: {
-        path: "videos",
-        model: "Video",
-      },
-    });
+
+    const course = await Course.findById(courseId);
+    if(status === "Draft" && course.studentsEnrolled.length > 0) {
+      throw new ApiError(403, "Cannot draft a course which already have students enrolled !!")
+    } 
   
     if (!course) {
       throw new ApiError(404, "Course not found !!");
@@ -629,7 +618,15 @@ const getCourseData = asyncHandler(async (req, res) => {
           model: "Video",
         },
       },
-    ]);
+      {
+        path: "instructor",
+        select: "firstName lastName avatar createdAt",
+        populate: {
+          path: "profile",
+          select: "about"
+        }
+      }
+    ],);
   
     if(!course) {
       throw new ApiError(404, "Course not found !!")
