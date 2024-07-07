@@ -76,7 +76,7 @@ export const courseEnrollmentEmail = (courseName, name) => {
                     are excited to have you as a participant!</p>
                 <p>Please log in to your learning dashboard to access the course materials and start your learning journey.
                 </p>
-                <a class="cta" href="${process.env.FRONTEND_URI}/dashboard">Go to Dashboard</a>
+                <a class="cta" href="${process.env.FRONTEND_URI}/dashboard/my-profile">Go to Dashboard</a>
             </div>
             <div class="support">If you have any questions or need assistance, please feel free to reach out to us at <a
                     href="mailto:edypros.owner@gmail.com">edypros.owner@gmail.com</a>. We are here to help!</div>
