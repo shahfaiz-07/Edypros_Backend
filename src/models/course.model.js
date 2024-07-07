@@ -41,6 +41,11 @@ const courseSchema = new mongoose.Schema(
     tags: {
       type: [String]
     },
+    language: {
+      type: String,
+      trim: true,
+      required: true
+    },
     category: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Category"

@@ -15,10 +15,9 @@ import { CourseProgress } from './../models/courseProgress.model.js';
 import { RatingAndReview } from "../models/ratingAndReview.model.js";
 const createCourse = asyncHandler(async (req, res) => {
   try {
-    const { name, description, learnings, price, category, tags, preRequisites } =
+    const { name, description, learnings, price, category, tags, preRequisites, language } =
       req.body;
     console.log(req.body);
-    // console.log(category, name, description)
     console.log(req.body);
     if (!name || !description || !learnings || !price || !category) {
       throw new ApiError(400, "All fields are required !!");
@@ -47,6 +46,7 @@ const createCourse = asyncHandler(async (req, res) => {
       name,
       description,
       learnings,
+      language,
       price,
       thumbnail: thumbnail.url,
       category: categoryObj._id,
