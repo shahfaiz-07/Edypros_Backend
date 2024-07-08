@@ -584,11 +584,14 @@ const changeCourseStatus = asyncHandler(async (req, res) => {
     const course = await Course.findById(courseId);
     if(status === "Draft" && course.studentsEnrolled.length > 0) {
       throw new ApiError(403, "Cannot draft a course which already have students enrolled !!")
-    } 
-  
+    }
+
     if (!course) {
       throw new ApiError(404, "Course not found !!");
     }
+
+    course.status=status
+    await course.save();
   
     return res
       .status(200)

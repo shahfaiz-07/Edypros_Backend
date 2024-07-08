@@ -212,7 +212,7 @@ const getCategoryPageDetails = asyncHandler(async (req, res) => {
         $sort: { length: -1 },
       },
       {
-        $limit: 10,
+        $limit: 6,
       },
       {
         $lookup: {
