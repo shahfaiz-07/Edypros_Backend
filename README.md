@@ -8,6 +8,7 @@ Edypros is a fully functional ed-tech platform that enables users to create, con
 - Mongoose
 - JWT
 - Bcrypt
+- Cloudinary
 - Razorpay
 
 ## Features
